@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 5.0.1 (Python 3.9.13 on darwin)" generated="20230714 15:52:48.802" rpa="false" schemaversion="3">
+<suite id="s1" name="Robot Interactive Console" source="/Users/leoneloliveros/.vscode/extensions/robocorp.robotframework-lsp-1.11.0/src/robotframework_ls/vendored/robotframework_interactive/robot_interactive_console.robot">
+<test id="s1-t1" name="Default Task/Test" line="5">
+<kw name="Interpreter Main Loop" library="MainLoop">
+<kw name="Connect To Database">
+<arg>pymysql</arg>
+<arg>${DB_NAME}</arg>
+<arg>${DB_USER}</arg>
+<arg>${DB_PASSWORD}</arg>
+<arg>${DB_HOST}</arg>
+<msg timestamp="20230714 15:52:49.736" level="FAIL">No keyword with name 'Connect To Database' found.</msg>
+<status status="FAIL" starttime="20230714 15:52:49.735" endtime="20230714 15:52:49.736"/>
+</kw>
+<kw name="Query">
+<var>${orders}</var>
+<arg>SELECT * FROM (SELECT ab.ID_BENEFICIARIO, ab.ID_DE_INCIDENTE, dia.SERVER_AP, dia.MAC_APINT, dia.MAC_APEXT1, dia.MAC_APEXT2, dia.MAC_CD, dia.MAC_BTS, incoelec_customer.mintic_fo_main.FASE_OFICIAL, ab.FECHA_HORA_DE_APERTURA, TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) AS días_transcurridos FROM incoelec_mintic.mintic_service_manager_tk_fo_abiertos ab LEFT JOIN incoelec_mintic.mintic_diagnosticador dia ON ab.ID_BENEFICIARIO = dia.IDBEN LEFT JOIN incoelec_customer.mintic_fo_main ON dia.IDBEN = incoelec_customer.mintic_fo_main.ID_Beneficiario WHERE PRIORIDAD = '1 - Crítica' AND TITULO LIKE '%CAÍDA TOTAL CENTRO DIGITAL%' AND dia.STATE_APINT = 'online' AND dia.STATE_APEXT1 = 'online' AND dia.STATE_APEXT2 = 'online' AND (LENGTH(ab.fecha_inicio_reloj) &lt;= 17 OR ab.fecha_inicio_reloj IS NULL) AND ((incoelec_customer.mintic_fo_main.FASE_OFICIAL LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) &gt;= -3) OR (incoelec_customer.mintic_fo_main.FASE_OFICIAL NOT LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) &gt;= -2))) AS IM_CIERRES</arg>
+<status status="NOT RUN" starttime="20230714 15:52:49.737" endtime="20230714 15:52:49.737"/>
+</kw>
+<for flavor="IN">
+<var>${order}</var>
+<value>@{orders}</value>
+<iter>
+<var name="${order}"/>
+<kw name="Handle Order">
+<arg>${order}</arg>
+<status status="NOT RUN" starttime="20230714 15:52:49.739" endtime="20230714 15:52:49.739"/>
+</kw>
+<status status="NOT RUN" starttime="20230714 15:52:49.738" endtime="20230714 15:52:49.739"/>
+</iter>
+<status status="NOT RUN" starttime="20230714 15:52:49.737" endtime="20230714 15:52:49.739"/>
+</for>
+<status status="PASS" starttime="20230714 15:52:48.843" endtime="20230714 15:52:51.324"/>
+</kw>
+<status status="PASS" starttime="20230714 15:52:48.842" endtime="20230714 15:52:51.325"/>
+</test>
+<status status="PASS" starttime="20230714 15:52:48.804" endtime="20230714 15:52:51.326"/>
+</suite>
+<statistics>
+<total>
+<stat pass="1" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat pass="1" fail="0" skip="0" id="s1" name="Robot Interactive Console">Robot Interactive Console</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
