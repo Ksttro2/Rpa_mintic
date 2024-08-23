@@ -34,10 +34,7 @@ Start
 Get IMs From Database
     Connect To Database    pymysql    ${DB_NAME}    ${DB_USER}    ${DB_PASSWORD}    ${DB_HOST}
     ${ims}=    Query
-    ...    SELECT * FROM (SELECT ab.ID_BENEFICIARIO, ab.ID_DE_INCIDENTE, dia.SERVER_AP, dia.MAC_APINT, dia.MAC_APEXT1, dia.MAC_APEXT2, dia.MAC_CD, dia.MAC_BTS, incoelec_customer.mintic_fo_main.FASE_OFICIAL, ab.FECHA_HORA_DE_APERTURA, TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) AS días_transcurridos FROM incoelec_mintic.mintic_service_manager_tk_fo_abiertos ab LEFT JOIN incoelec_mintic.mintic_diagnosticador dia ON ab.ID_BENEFICIARIO = dia.IDBEN LEFT JOIN incoelec_customer.mintic_fo_main ON dia.IDBEN = incoelec_customer.mintic_fo_main.ID_Beneficiario WHERE ((PRIORIDAD = '1 - Crítica' AND TITULO LIKE '%CAÍDA TOTAL CENTRO DIGITAL%' AND TITULO NOT LIKE '%#PQR_SD%') OR (PRIORIDAD = '2 - Alta' AND TITULO LIKE '%CAÍDA PARCIAL%' AND TITULO NOT LIKE '%#PQR_SD%') OR (PRIORIDAD = '3 - Media' AND TITULO LIKE '%MEDICIÓN DIRECTA DE VELOCIDAD EFECTIVA DE TRANSMISIÓN DE DATOS - CAIDA%' AND TITULO NOT LIKE '%#PQR_SD%')) AND dia.STATE_APINT = 'online' AND dia.STATE_APEXT1 = 'online' AND dia.STATE_APEXT2 = 'online' AND (LENGTH(ab.fecha_inicio_reloj) <= 17 OR ab.fecha_inicio_reloj IS NULL) AND ((incoelec_customer.mintic_fo_main.FASE_OFICIAL LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) >= -3) OR (incoelec_customer.mintic_fo_main.FASE_OFICIAL NOT LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) >= -2))) AS IM_CIERRES
-    ${CURRENT_DATETIME}=    Evaluate    time.strftime("%Y%m%d_%H%M%S")    time
-    ${nombre_archivo}=    Catenate    ./casos_${CURRENT_DATETIME}.txt
-    Create File    ${nombre_archivo}
+    ...    SELECT * FROM (SELECT ab.ID_BENEFICIARIO, ab.ID_DE_INCIDENTE, dia.SERVER_AP, dia.MAC_APINT, dia.MAC_APEXT1, dia.MAC_APEXT2, dia.MAC_CD, dia.MAC_BTS, incoelec_customer.mintic_fo_main.FASE_OFICIAL, ab.FECHA_HORA_DE_APERTURA, TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) AS días_transcurridos FROM incoelec_mintic.mintic_service_manager_tk_fo_abiertos ab LEFT JOIN incoelec_mintic.mintic_diagnosticador dia ON ab.ID_BENEFICIARIO = dia.IDBEN LEFT JOIN incoelec_customer.mintic_fo_main ON dia.IDBEN = incoelec_customer.mintic_fo_main.ID_Beneficiario WHERE ((PRIORIDAD = '1 - Crítica' AND TITULO LIKE '%CAÍDA TOTAL CENTRO DIGITAL%' AND TITULO NOT LIKE '%#PQR_SD%') OR (PRIORIDAD = '2 - Alta' AND TITULO LIKE '%CAÍDA PARCIAL%' AND TITULO NOT LIKE '%#PQR_SD%') OR (PRIORIDAD = '3 - Media' AND TITULO LIKE '%MEDICIÓN DIRECTA DE VELOCIDAD EFECTIVA DE TRANSMISIÓN DE DATOS - CAIDA%' AND TITULO NOT LIKE '%#PQR_SD%')) AND dia.STATE_APINT = 'online' AND dia.STATE_APEXT1 = 'online' AND ID_DE_INCIDENTE = 'IM2737738' AND dia.STATE_APEXT2 = 'online' AND (LENGTH(ab.fecha_inicio_reloj) <= 35 OR ab.fecha_inicio_reloj IS NULL) AND ((incoelec_customer.mintic_fo_main.FASE_OFICIAL LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) >= -3) OR (incoelec_customer.mintic_fo_main.FASE_OFICIAL NOT LIKE '%3%' AND TIMESTAMPDIFF(DAY, DATE(NOW()), ab.FECHA_HORA_DE_APERTURA) >= -2))) AS IM_CIERRES
     FOR    ${im}    IN    @{ims}
        log to Console  test${im["ID_DE_INCIDENTE"]}
         Append To File    ${nombre_archivo}    ${im}
@@ -428,7 +425,26 @@ Append To List Dates
 
 CREATE PDR
     [Arguments]    ${im_data}    ${im}    ${response}
-
+    ${new_dup}=    Add Time To Date    ${date_up}    5h
+    ${len_inidate}=    Get length    ${response['IM']['FechaIniReloj']}
+    IF    ${len_inidate} == 2
+        ${last_date_seg_pdr}=    Set Variable    ${response['IM']['FechaIniReloj'][-1]}
+        ${item_up_seg_pdr}=    Subtract Date From Date    ${last_date_seg_pdr}    ${new_dup}
+        IF    ${item_up_seg_pdr} < 0
+            ${Aux_FechaIniReloj_list}=    Create List
+            ${Aux_FechaFinReloj_list}=    Create List
+            ${fecha_fin_list}=    Append To List Dates    ${Aux_FechaFinReloj_list}    ${response['IM']['FechaFinReloj'][0]}    'FIN'
+            Log To Console    ${fecha_fin_list}
+            ${fecha_ini_list}=    Append To List Dates    ${Aux_FechaIniReloj_list}    ${response['IM']['FechaIniReloj'][0]}    'INI'
+        ELSE
+            ${fecha_fin_list}=    Set Variable    ${response['IM']['FechaFinReloj']}
+            ${fecha_ini_list}=    Set Variable    ${response['IM']['FechaIniReloj']}
+        END
+    END
+    # estamos aqui
+    Log To Console    ${new_dup}
+    Log To Console    ${fecha_fin_list}
+    Log To Console    ${fecha_ini_list}
     ${total_pdr_exist}=    Run Keyword And Return Status
     ...    Dictionary Should Contain Key
     ...    ${response['IM']}
@@ -441,10 +457,9 @@ CREATE PDR
         Log To Console    totaltrue
     ELSE
         Log To Console    totalfalse
-        ${FechaIniReloj_list}=    Set Variable    ${response['IM']['FechaIniReloj']}
-        ${FechaFinReloj_list}=    Set Variable    ${response['IM']['FechaFinReloj']}
-        ${last_date}=    Set Variable    ${response['IM']['FechaFinReloj'][-1]}
-        ${new_dup}=    Add Time To Date    ${date_up}    5h
+        ${FechaIniReloj_list}=    Set Variable    ${fecha_ini_list}
+        ${FechaFinReloj_list}=    Set Variable    ${fecha_fin_list}
+        ${last_date}=    Set Variable    ${fecha_fin_list[-1]}
         ${item_up}=    Subtract Date From Date    ${last_date}    ${new_dup}
         IF    ${item_up} >= 0
             ${new_date_op}=    Subtract Time From Date    ${date_up}    3s
